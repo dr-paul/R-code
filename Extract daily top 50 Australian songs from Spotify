@@ -1,0 +1,30 @@
+#code prepared on a Mac
+
+#Step 1: load required packages
+library(spotifyr)
+library(tidyverse)
+library(knitr)
+
+#Step 2: get current date and define file path
+currentDate <- Sys.Date()
+csvFileName <- paste("/Users/<NAME>/Desktop/data/top50 ",currentDate,".csv",sep="")
+
+#Step 3: gain access to Spotify
+Sys.setenv(SPOTIFY_CLIENT_ID = '<CLIENT ID>')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '<CLIENT SECRET>')
+access_token <- get_spotify_access_token()
+
+#Step 4: get playlist audio features (Australia Top 50 playlist - daily update of top songs right now)
+#to get playlist URI code, open the app > find the playlist you want > click the three dots > click share > click Copy Playlist Link
+#https://open.spotify.com/playlist/37i9dQZEVXbJPcfkRz0wJ0?si=x7QY1PQrS_KrxHo3TjdUqA
+#the URI is after playlist/ and finishes at ?
+
+playlist_username <- 'spotify'
+playlist_uris <- '37i9dQZEVXbJPcfkRz0wJ0'
+top50 <- get_playlist_audio_features(playlist_username, playlist_uris)
+
+#Step 5: coerce the data.frame to all-character
+df_top50 <- data.frame(lapply(top50, as.character), stringsAsFactors=FALSE)
+
+#Step 6: export as CSV
+write.csv(df_top50, file=csvFileName)
