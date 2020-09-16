@@ -1,0 +1,84 @@
+#FACTOR ANALYSIS (MAXIMUM LIKELIHOOD, NOT PCA)
+
+#widely used in market research (esp. with psychometric variables such as opinions on brand) to reduce the number of variables into an "unobserved" latent variable
+#for example, people's opinion of brand covers a wide variety of things: trust, likeability, honest, etc..., so we have to ask them all these questions to measure 'brand'
+#but it would then be too difficult to use all these variables in analysis, so we pull out the underlying 'factor' from them -> which should be "brand"
+#we don't want any pricing or other non-brand variables to be strongly related to the 'brand' factor
+
+#when would this be useful?
+#mainly in consumer research, when we have a questionnaire and want to build advanced models
+#to group attributes together from coding user comments to draw out the main themes
+#might be useful to group website events 
+
+#THIS CODE IS WRITTEN TO RUN ON A MAC
+
+#process
+1.where the code says "inputdata <- subset(data,select=c(" this is telling R to select the following variables for the analysis from all the data
+2. change VAR1, VAR2, etc... to the names of the variables you want to include
+3. then copy the script and run it in R
+
+#Step 0: setup R and load the data
+
+#load required packages
+
+library(psych)
+library(nFactors)
+
+#load data
+
+data <- read.csv("/Users/.../data/File Name.csv", header=TRUE)
+str(data)
+
+#Step 1: specify model
+
+#specify a subset of variables from the data
+
+inputdata <- subset(data, select=c(VAR1, VAR2, VAR3))
+
+#create a correlation matrix for later
+
+cor <- cor(inputdata)
+
+#Step 2: run the analysis
+
+#varimax is the best rotation, but you could chose oblimin, quatimax, promax, simplimax, cluster
+
+results <- factanal(inputdata, factors=3, rotation="varimax")
+
+#for variables to load onto factors, the cutoff (eigenvalue) should be .4 or higher, but save everything because we want to see the cross-loadings
+
+print(results, digits=4, cutoff=0, sort=TRUE)
+
+#draw a scree plot of the eigenvalues to determine how many factors you should specify in the model
+#dots on the map indicate number of factors and their corresponding eigenvalue
+#when the eigevalue is below 1, then the factor isn't very strong in the data (the red line crosses it out)
+#for example, the red line crosses the fourth dot (the 4th factors eigenvalue is below 1, so you should only extract 3 factors)
+
+ev <- eigen(cor)
+ap <- parallel(subject=nrow(inputdata), var=ncol(inputdata), rep=100, cent=.05)
+ns <- nScree(x=ev$values, aparallel=ap$eigen$qevpea)
+plotnScree(ns)
+
+#save just the factor loadings
+
+load <- results$loadings
+
+#reveal model quality
+
+results2 <- factor.stats(cor, load, n.obs=nrow(inputdata),alpha=.05)
+results2
+
+#get the R2
+
+results2$R2
+
+#get the adjusted r-squared
+
+Rsq <- results2$R2
+nobs <- nrow(na.omit(inputdata))
+nvars <- ncol(inputdata)-1
+(1-((1-Rsq)*((nobs-1)/(nobs-nvars-1))))
+
+#get the RMSEA
+
+results2$RMSEA
