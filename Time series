@@ -1,0 +1,25 @@
+#load package
+library(forecast)
+
+#Setting up the data file
+data <- read.csv("C:/.../Data/File Name.csv", header=TRUE)
+inputdata <- subset(data,select=c(COLUMN NAME))
+
+#30-day forecast with low accuracy
+sensor <- ts(inputdata, frequency=30) #30 days per month as a season
+fit <- auto.arima(sensor)
+fcast1 <- forecast(fit)
+plot(fcast1)
+grid()
+fcast1
+write.csv(fcast1, file="C:/.../Data/Forecast (Month).csv")
+
+
+#14-day forecast with high accuracy
+sensor <- ts(inputdata, frequency=7) #7 days per week as a season
+fit <- auto.arima(sensor)
+fcast2 <- forecast(fit)
+plot(fcast2)
+grid()
+fcast2
+write.csv(fcast2, file="C:/.../Data/Forecast (Week).csv")
