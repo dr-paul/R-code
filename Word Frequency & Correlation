@@ -1,0 +1,32 @@
+#Word frequencies and correlations
+
+#originally written in 2015
+
+#load packages
+require(tm)
+
+#load data
+file_loc <- "C:/.../Data/File Na,e.csv"
+x <- read.csv(file_loc, header=FALSE)	                				#LOAD FILE INTO R (TRUE IF FIRST ROW CONTAINS VARAIBLE NAME)
+corp <- Corpus(DataframeSource(x))				                  	#LOAD FILE FOR TM PACKAGE
+dtm <- DocumentTermMatrix(corp) 				                    	#MAKE EACH ROW OF THE FILE A SEPARATE DOCUMENT
+inspect(corp) 								                                #SHOW TEXT IN R
+
+#myStopwords <- c(stopwords('english'), "is", "a", "it", "was", "and")
+#corp <- tm_map(corp, removeWords, myStopwords) 			        #REMOVES THE STOPWORDS
+corp <- tm_map(corp, content_transformer(tolower)) 		        #SET TO LOWER CASE
+corp <- tm_map(corp, removeNumbers)					                  #KEEP ONLY LETTERS
+corp <- tm_map(corp, removePunctuation)					              #REMOVE PUNCTUATION (!@#$%&*?)
+corp <- tm_map(corp, content_transformer(stripWhitespace))		#REMOVE EXTRA SPACES
+dtm <- DocumentTermMatrix(corp)
+inspect(dtm)							                                  	#COUNTS OF WORDS (BINARY)
+dtm2 <- inspect(dtm)
+df <- t(dtm)					                                  			#WORDS AS ROWS AND RESPONDENTS AS COLUMNS
+z <- inspect(df)		                                					#WORDS AS ROWS AND RESPONDENTS AS COLUMNS
+z <- rowSums(z)				                                				#ONLY KEEP THE SUM (WORD FREQUENCY)
+write.csv(z, file="C:/.../Data/WordFreq.csv")	          			#EXPORT TO EXCEL
+
+#THIS NEXT SECTION RUNS PEARSON CORRELATIONS
+
+cor_2 <- cor(as.matrix(dtm))				                      		#WORD CORRELATION MATRIX (INCLUDES NEGATIVE)
+write.csv(cor_2, file="C:/.../Data//WordAssocs.csv")	  			#EXPORT TO EXCEL
