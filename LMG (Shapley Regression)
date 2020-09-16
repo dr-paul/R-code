@@ -1,0 +1,55 @@
+ #LMG (SHAPLEY REGRESSION)
+ 
+ #use this when your predictors (IVs) are highly correlated, as a regular OLS regression will produce a false positive
+ #could also use Shapley's when OLS suffers from multicollinearity and no alternatives available (i.e. can't remove IVs from model)
+ 
+ #THIS CODE IS WRITTEN TO RUN ON A MAC
+ 
+ #process/ notes
+ 1. the relaimpo package will only work with up to 19-20 variables (1 DV and 18-19 IVs); a model with 18-19 IVs will take up to 5-10 minutes to run as these models are very computer-intensive
+ 2. code missing data as NA in the csv file, not as blanks
+ 3. where the code says "inputdata <- subset(data,select=c(" this is telling R to select the following variables for the analysis from all the data
+ 4. change "DV" to the name of the dependent variable (i.e. sales, satisfaction, etc...)
+ 5. the remaining variables in the list: IV1, IV2, etc... are the independent variables, changes these to the variables you want to add to the model
+ 6. then copy the script and run it in R
+ 7. paste the output in a text editor, Atom or Google Sheets
+ 8. "lmg.results$lmg" gives you the Shapley values for the IVs (just multiply by 100 to get a percentage - 0.30084 = 30.08%)
+ 9. "lmg.results$R2" gives you the R-squared value (model quality), but the Adj R-squared is a better metric
+ 10. you can also check the IVs for multicollinearity by examining the VIF and t scores
+ 
+ #Step 0: load required packages
+ 
+ require(relaimpo)
+ library(car)
+
+ #load data
+ 
+ data <- read.csv("/Users/.../data/File Name.csv", header=TRUE)
+ str(data)
+ 
+ #Step 1: specify the model
+ 
+ inputdata <- subset(data,select=c(DV, IV1, IV2, IV3))
+ str(inputdata)
+ options(scipen=999)
+
+ lmg.results <- calc.relimp(inputdata,type="lmg",rela=TRUE)
+ 
+ #Step 3: run the analysis
+ 
+ #calculate Shapley Values and R-squared for model
+ 
+ lmg.results$lmg
+ lmg.results$R2
+ Rsq <- lmg.results$R2
+
+ # adjusted r-squared
+ 
+ nobs <- NROW(na.omit(inputdata))
+ nvars <- NCOL(inputdata)-1
+ (1-((1-Rsq)*((nobs-1)/(nobs-nvars-1))))
+
+ #VIF and tolerance (t) for predictors
+ 
+ vif(lm(inputdata))
+ 1/vif(lm(inputdata))
