@@ -1,0 +1,28 @@
+ #Ensure you have the following packages installed for R
+ require(relaimpo)
+ library(car)
+
+ #Setting up the data file
+ data <- read.csv("C:/.../Data/File Name.csv", header=TRUE)
+ str(data)
+
+ #Specifying the model
+ inputdata <- subset(data,select=c(DV, IV1, IV2, IV3))
+ str(inputdata)
+ options(scipen=999)
+
+ pmvd.results <- calc.relimp(inputdata,type="pmvd",rela=TRUE)
+ 
+ # Shapley Values and R-squared for model
+ pmvd.results$pmvd
+ pmvd.results$R2
+ Rsq <- pmvd.results$R2
+
+ # Adjusted R-squared
+ nobs <- NROW(na.omit(inputdata))
+ nvars <- NCOL(inputdata)-1
+ (1-((1-Rsq)*((nobs-1)/(nobs-nvars-1))))
+
+ #VIF and tolerance (t) for predictors
+ vif(lm(inputdata))
+ 1/vif(lm(inputdata))
