@@ -1,0 +1,68 @@
+#MULTIPLE CORRESPONDENCE ANALYSIS
+ 
+ #a useful methodology (1) to see what constructs are associated with brands (i.e. who owns which attributes in the competitive space), (2) to identify patterns of behaviour/ product usage (i.e. do consumers with different products use them the same way?), and (3) segmentation - preferences among groups and/or complimentary products
+ 
+ #THIS CODE IS WRITTEN TO RUN ON WINDOWS
+ 
+ #process/ notes
+ 1. "rubbish in, rubbish out" - need to be careful with the quality of data as there are no diagnostics to check the results
+ 2. the data file should already be cut to the group of people you want to investigate (i.e. csv file has only 30-35 year old respondents)
+ 3. all the data should be TEXT (as single words, not sentences), like so:
+  ID    BRAND   BRANDING    SERVICE
+  001   MBV     Novel       Convenient
+  002   MBV     Trendy      Delays
+  003   Toyota  Friendly    Convenient
+ 4. where the code says "vars = data[,c("VAR1","VAR2",...etc" this is telling R to select the following variables to analyse
+ 5. change these to the variable names in the csv file (one needs to be the brand variable if you want to see the relation between brand and attribtues)
+ 6. run the code in R
+ 7. R should generate a perceptual map which serves as a guide to the final chart mainly because it is not fixed (i.e. 0,0 coordinates are not in the middle and the length on either side of the 0 for each axis is not equal)
+ 8. of all the output, there is only one table of interest which appears directly below "mca1$var$coord"
+ 9. and from that table, only the first two dimensions contain the x and y coordinates: dim 1 = x-axis, dim 2 = y-axis
+ 10. in Google Slides (or PowerPoint or Keynote), select the X Y Scatter chart, add the x and y axis values and adjust the chart axes so they have the same length (i.e. -5 to 5) - makes 0,0 position in the middle of the chart
+ 
+ #Step 0: load required packages
+ 
+ require(FactoMineR)
+ require(ggplot2)
+ 
+ #load data
+ 
+ data <- read.csv("C:/.../Data/File Name.csv", header=TRUE)
+ 
+ #Step 1: specify the variables for MCA (all must be binary variables)
+
+ vars = data[,c("VAR1", "VAR2", "VAR3")]
+
+ #number of categories per variable
+ 
+ cats = apply(vars, 2, function(x) nlevels(as.factor(x)))
+
+ #Step 2: run the analysis
+ 
+ #apply MCA
+ 
+ mca1 = MCA(vars, graph=FALSE)
+
+ #eignevalue table
+ 
+ mca1$eig
+ 
+ #column coordinates
+ 
+ mca1$var$coord
+ 
+ #row coordinates
+ 
+ mca1$ind$coord
+
+ #data frames for ggplot
+ 
+ mca1_vars_df = data.frame(mca1$var$coord, Variable=rep(names(cats), cats))
+ mca1_obs_df = data.frame(mca1$ind$coord)
+
+ #plot of variable categories
+ 
+ ggplot(data=mca1_vars_df, aes(x=Dim.1, y=Dim.2, label=rownames(mca1_vars_df))) +
+  geom_hline(yintercept=0, colour="gray70") +
+  geom_vline(xintercept=0, colour="gray70") +
+  geom_text(aes(colour=Variable))
