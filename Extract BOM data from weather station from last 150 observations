@@ -1,0 +1,63 @@
+#load required packages
+library(bomrang)
+
+#get current date
+currentDate <- Sys.Date()
+csvFileName <- paste("/Users/.../data/weather ",currentDate,".csv",sep="")
+
+#run query
+x <- get_current_weather("Melbourne (Olympic Park)")
+
+#data it pulls:
+#full_name               station name
+#local_date_time_full    date and time of data collection
+#lat                     latitude
+#lon                     longitude
+#apparent_t              feels like temperature
+#air_temp                air temperature (actual temp)
+#dewpt                   dew point
+#press                   pressure (humidity)
+#race_trace              amount of rain (in mm)
+#wind_dir                wind direction
+#wind_spd_kmh            wind speed (km/h)
+
+#Melbourne station names
+#    Melbourne (Olympic Park)
+#    Melbourne Airport
+#    Bundoora
+#    Essendon Airport
+#    Viewbank
+#    Coldstream
+#    St Kilda Harbour
+#    Scoresby
+#    Ferny Creek
+#    Moorabbin Airport
+#    Cranbourne
+#    Frankston
+#Sydney station names
+#    Sydney
+#    Fort Denison
+#    Canterbury
+#    Sydney Airport
+#    Little Bay 
+#    Kurnell
+#    Lucas Heights
+#    Holsworthy Aerodrome AWS
+#    Holsworthy Defence AWS
+#    Wattamolla
+#    Campbelltown
+#    Camden
+#    Badgerys Creek
+#    Horsley Park
+#    Bankstown
+#    Sydney Olympic Park
+#    Prospect Dam
+#    Penrith
+#    Parramatta
+#    Sydney Harbour
+#    North Head
+#    Terrey Hills
+#    Richmond
+
+#export
+write.csv(x, file=csvFileName)
