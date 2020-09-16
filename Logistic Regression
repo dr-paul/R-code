@@ -1,0 +1,70 @@
+ #LOGISTIC REGRESSION
+ 
+ #THIS CODE IS WRITTEN TO RUN ON A MAC
+ 
+ #process
+ 
+ #Step 0: setup R and load the data
+ 
+ #load required packaged
+ 
+ library(aod)
+ library(car)
+ 
+ #load data
+ 
+ data <- read.csv("/Users/.../data/File Name.csv", header=TRUE)
+ str(data)
+
+ #Step 1: specify the model
+ 
+ inputdata <- subset(data,select=c(DV, IV1, IV2, IV3))
+ str(inputdata)
+ options(scipen=999)
+
+ #the code beloiw estimates a logistic regression using GLM (generalised linear model)
+ 
+ logit <- glm(DV ~ IV1 + IV2 + IV3, data = inputdata, family = "binomial")
+ summary(logit)
+
+ #chi-square statistic
+ 
+ with(logit, null.deviance - deviance)
+
+ #degrees of freedom
+ 
+ with(logit, df.null - df.residual)
+
+ #significance of Chi-square (p-value)
+ 
+ with(logit, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
+ 
+ #Step 2: results
+
+ #log-likelihood
+ 
+ logLik(logit)
+
+ #-2*Log-likelihood - use this to compare models
+ 
+ -2*logLik(logit)
+
+ #BIC and AIC - metrics to check the quality of the model (goodness of fit with the data)
+ 
+ BIC(logit)
+ AIC(logit)
+ 
+ #AICc (nvars=no. of predictors and nobs=sample size)
+ 
+ nobs <- nobs(logit)
+ nvars <- ncol(inputdata)-1
+ AIC(logit)+2*nvars*(nvars+1)/(nobs-nvars-1)
+
+ #VIF and tolerance (t) for predictors
+ 
+ vif(logit)
+ 1/vif(logit)
+
+ #Exponentiate the coefficients and interpret them as odds-ratios plus 95% CI
+ 
+ exp(cbind(OR = coef(logit), confint(logit)))
