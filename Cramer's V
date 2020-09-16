@@ -1,0 +1,13 @@
+#Calculate Cramer's V for a two categorical variables
+
+#load package
+library(rcompanion)
+
+#load data
+df <- read.csv("C:/.../Data/File Name.csv", header=TRUE)
+
+#run the confusion matrix
+crosstab <- table(df[c("A", "B")]) #1st is row, 2nd is column
+
+#calculate Cramer's V
+cramerV(crosstab)
