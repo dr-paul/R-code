@@ -1,0 +1,83 @@
+#ATTRIBUTION MODELLING WITH MARKOV CHAINS
+
+#attribution modelling is a way of determining how credit for sales or events (called conversions) is assigned to touchpoints
+#for example, in "last interaction", 100% of the credit for the conversion goes to the last touchpoint (social/ email/ display) the user engaged with
+#this is useful to identify which channels are working most effectively and which are not 
+#can also be used to better understand the order that people see advertising in to tune it better to the user journey
+#i.e. if more conversions happen when someone sees an email first, then we we can optimise the email to be more introductory (find out more) than call-to-action to buy
+
+#THIS CODE IS WRITTEN TO RUN ON A MAC
+
+#process
+#1) data file specs
+#each row represents a users(?) journey
+#four must have variables
+#  "path" which represents the user journey like so: "email > facebook > display ad"
+#  the total number of times the user(s) converted from that path
+#  the total number of times the user(s) did not covert from that path
+#  the total monetary value of the conversions (i.e. paid $1.59 per conversion from path x, 2 conversions so total value = $3.19)
+#2) specify variable names and run the code
+
+#Step 0: setup R and load the data
+
+#load required packages
+
+library(ChannelAttribution)
+library(ggplot2)
+library(reshape)
+
+#load data
+
+data <- read.csv("/Users/.../data/File Name.csv")
+
+#specify variable names here so you don't have to do it everywhere else in the code
+
+var_path <- "path" #name of the variable containing the paths
+var_conv <- "total_conversions" #name of the variable containing the total number of conversions from that path
+var_value <- "total_conversion_value" #name of the variable containing the monetary value of conversions
+var_null <- "total_null" #name of the variable containing the total number of NON-conversions from that path
+sep <- ">" #the symbol used to separate the channels in the path variable (i.e. display > social > eDM)
+
+#Step 1: run the simple heuristic models (first click/touch, last click/touch, linear)
+
+heuristic <- heuristic_models(data, var_path=var_path, var_conv=var_conv, var_value=var_value, sep=sep)
+
+#Step 2: run the Markov model and export the extra info for further analysis later on
+
+markov <- markov_model(data, var_path=var_path, var_conv=var_conv, var_value=var_value, var_null=var_null, order=1, out_more=TRUE, sep=sep)
+#write.csv(markov$result, file="/Users/pvella/Desktop/data/markov_model_result.csv")
+write.csv(markov$transition_matrix, file="/Users/pvella/Desktop/data/markov_model_transition_matrix.csv")
+write.csv(markov$removal_effects, file="/Users/pvella/Desktop/data/markov_model_removal_effects.csv")
+
+#Step 3: merge the two datasets by channel name and export
+
+R <- merge(heuristic, markov$result, by='channel_name')
+
+write.csv(R, file="/Users/.../data/attribution_models.csv")
+
+#Step 4: build a bar chart of the total conversions
+
+#selects only relevant columns to plot
+
+R1 <- R[, (colnames(R)%in%c('channel_name', 'first_touch_conversions', 'last_touch_conversions', 'linear_touch_conversions', 'total_conversions'))]
+
+#renames the columns
+
+colnames(R1) <- c('channel_name', 'first_touch', 'last_touch', 'linear_touch', 'markov_model') 
+
+#transforms the dataset into a data frame that ggplot2 can use to graph the outcomes
+
+R1 <- melt(R1, id='channel_name')
+
+model <- ggplot(R1, aes(channel_name, value, fill = variable)) +
+  geom_bar(stat='identity', position='dodge') +
+  ggtitle('TOTAL CONVERSIONS') + 
+  theme(axis.title.x = element_text(vjust = -2)) +
+  theme(axis.title.y = element_text(vjust = +2)) +
+  theme(title = element_text(size = 16)) +
+  theme(plot.title=element_text(size = 20)) +
+  ylab("")
+
+png('/Users/.../data/attribution.png')
+plot(model)
+dev.off()
