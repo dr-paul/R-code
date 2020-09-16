@@ -1,0 +1,33 @@
+ #Ensure you have the AlgDesign package installed for R
+
+ #Incomplete Block Design (IBD) function
+ incomplete.block.design <- function(number.alternatives, number.blocks, alternatives.per.block, n.repeats = 1000){
+  library(AlgDesign)
+  best.result = NULL
+  best.D = -Inf
+  for (i in 1:n.repeats){
+   alg.results <- optBlock(~.,withinData=factor(1:number.alternatives),blocksizes=rep(alternatives.per.block,number.blocks), nRepeats=5000) #BIB
+   if (alg.results$D > best.D){
+    best.results = alg.results
+    best.D = alg.results$D
+   }
+  }
+  design <- matrix(NA,number.blocks,alternatives.per.block, dimnames= list(block = 1:number.blocks, Alternative = 1:alternatives.per.block))
+  binary.design <- matrix(0,number.blocks,number.alternatives, dimnames= list(block = 1:number.blocks, alternative = 1:number.alternatives))
+  counter <- 0
+  for (block in alg.results$Blocks){
+   counter <- counter + 1
+   blck <- unlist(block)
+   design[counter,] <- blck
+   for (a in blck)
+    binary.design[counter,a] <- 1
+  }
+  n.appearances.per.alternative <- table(as.numeric(design))
+  combinations.of.alternatives <- crossprod(table(c(rep(1:number.blocks, rep(alternatives.per.block,number.blocks))),alg.results$design[,1]))
+  list(binary.design = t(binary.design), design = t(design), frequencies = n.appearances.per.alternative, pairwise.frequencies=combinations.of.alternatives, binary.correlations = round(cor(binary.design),2))}
+
+ #This is where you input the projects parameters
+ #number.alternatives = number of items to choose from (i.e. 3 options: $5 per mth, $10 per mth, $15 per mth)
+ #number.blocks = number of different blocks (more blocks means more even spread of items but more questions for each respondent to answer)
+ #alternatives.per.block = number of items to appear in each block
+ incomplete.block.design(number.alternatives = 10, number.blocks = 11, alternatives.per.block = 5, n.repeats = 100)
