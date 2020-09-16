@@ -1,0 +1,51 @@
+ #Setting up the data file
+ data <- read.csv("C:/.../Data/File Name.csv", header=TRUE)
+ str(data)
+
+ #Specifying the model
+ n <- 20
+ inputdata <- subset(data,select=c("A", "B", "C", "D"))
+
+ #Number of combinations
+ xcol <- ncol(inputdata) #number of options
+ total_comb = (2^(xcol)-1) #total number of combinations
+ total_comb
+
+ #Number of Options in each Combination
+ count.opt <- function(inputdata, n = 2) {
+   opt.sum <- function(cols) ncol(inputdata[cols])
+   counts <- combn(colnames(inputdata), n, FUN = opt.sum)
+   names  <- combn(colnames(inputdata), n, FUN = paste, collapse = " & ")
+   setNames(counts, names)
+ }
+
+ options <- unlist(lapply(1:4, count.opt, inputdata = inputdata))
+
+ #Unduplicated Counts of all column combinations (REACH COUNT)
+ count.or <- function(inputdata, n = 2) {
+   or.sum <- function(cols) sum(rowSums(inputdata[cols]) > 0)
+   counts <- combn(colnames(inputdata), n, FUN = or.sum)
+   names  <- combn(colnames(inputdata), n, FUN = paste, collapse = " & ")
+   setNames(counts, names)
+ }
+
+ reach <- unlist(lapply(1:4, count.or, inputdata = inputdata))
+
+ #Duplicated Counts of all column combinations (PREFERENCE COUNT)
+ count.and <- function(inputdata, n = 2) {
+   and.sum <- function(cols) sum((inputdata[cols]) > 0)
+   counts <- combn(colnames(inputdata), n, FUN = and.sum)
+   names  <- combn(colnames(inputdata), n, FUN = paste, collapse = " & ")
+   setNames(counts, names)
+ }
+
+ preference <- unlist(lapply(1:4, count.and, inputdata = inputdata))
+
+ #TURF
+ prop.tot <- (reach*preference)/n		#prop.total is already %
+ rank <- rank(-prop.tot)
+ TURF = cbind(options, reach, preference, prop.tot, rank)
+ TURF <- TURF[order(-reach, options, -preference),]
+ TURF
+
+ write.csv(TURF, file = "C:/.../Data/TURF Analysis.csv")
