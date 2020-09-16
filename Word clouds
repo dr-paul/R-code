@@ -1,0 +1,28 @@
+ #load packages
+ library(RXKCD)
+ library(tm)
+ library(wordcloud)
+ library(RColorBrewer)
+
+ #load
+ path <- read.csv("C:/.../Data/File Name.csv", header=FALSE)
+
+ #prepare data
+ xkcd.corpus <- Corpus(DataframeSource(data.frame(path[, 1]))) #1 means first column
+ xkcd.corpus <- tm_map(xkcd.corpus, removePunctuation)
+ xkcd.corpus <- tm_map(xkcd.corpus, content_transformer(tolower))
+ xkcd.corpus <- tm_map(xkcd.corpus, function(x) removeWords(x, stopwords("english")))
+ tdm <- TermDocumentMatrix(xkcd.corpus)
+ m <- as.matrix(tdm)
+ v <- sort(rowSums(m),decreasing=TRUE)
+ d <- data.frame(word = names(v),freq=v)
+
+ #generate word cloud colours
+ pal <- brewer.pal(10, "Paired")
+
+ #word cloud size
+ png("wordcloud.png", width=1920,height=1080)
+
+ #word cloud
+ wordcloud(d$word,d$freq, scale=c(8,.3),min.freq=2,max.words=8000, random.order=T, rot.per=.15, colors=pal)
+ dev.off()
