@@ -1,0 +1,15 @@
+ #Ensure you have the AlgDesign package installed for R
+
+ #Creating a full factorial design
+ library(AlgDesign)
+ ffd <- gen.factorial(c(2,3,4), varNames=c("A","B","C"), factors="all")
+
+ #Removing prohibited pairs (copy-paste for each pair)
+ #ffd <- ffd[(ffd$A !=1 | ffd$B !=1),]
+ ffd
+
+ #Generating a fractional factorial design
+ #Each choice task has rep(n) alternatives, usually 2 or 3
+ #Produce rep( ,n) blocks/ choice tasks
+ BIB <- optBlock(~.,withinData=(1:nrow(ffd)),blocksizes=rep(2,10))
+ BIB
