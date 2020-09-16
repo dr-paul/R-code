@@ -1,0 +1,42 @@
+#RECURSIVE PARTITIONING OF REGRESSION TREES
+
+#a way to develop and test whether variables are useful to segment a group of people
+#this process creates a decision tree that tries to correctly classify people by splitting them into significant groups
+#it is 'recursive' because each group can be split infinitely until (a) no more significant differences exist, and (b) the group of people is smaller than 30 (too small for a segment)
+#a better way to do segmentation than cluster analysis
+
+#THIS CODE IS WRITTEN TO RUN ON A MAC
+
+#process
+#1) each row in the dataset must be info for 1 person
+#2) all the variables must be categorical (i.e. age, gender, location, purchase model, brochure download Y/N)
+#3) define your variables of interest
+#4) the output of "analysis" should tell you the number of people and the proportion
+
+#Step 0: load required packages
+
+library(rpart)
+library(partykit)
+
+#load data
+
+inputdata <- read.csv("/Users/.../data/File Name.csv", header=TRUE)
+str(inputdata)
+
+#select a subset of the data if needed
+
+inputdata <- subset(inputdata, select=c(DV, IV1, IV2, IV3))
+str(inputdata)
+
+#Step 1: specify the model
+#minsplit=30 means the node must have at least 30 people before attempting to split it
+#minbucket=30 means that the split groups must have at least 30 people in them otherwise leave as is
+
+analysis <- rpart(DV ~ IV1 + IV2, data=inputdata, model=TRUE, control=rpart.control(minsplit=30, minbucket=30))
+
+#Step 2: plot and save
+
+diagram <- as.party(analysis)
+png('/Users/.../data/diagram.png')
+plot(diagram)
+dev.off()
