@@ -1,0 +1,140 @@
+#PROPENSITY SCORE MATCHING
+
+#PSM is a technique that attempts to estimate the effect of a treatment by accounting for the covariates that predict receiving the treatment
+#For example, you may want to know the consequences of smoking
+#The treatment group are "smokers"
+#The performance metric of interest is "rate of cancer"
+#And then looking for what factors bias this performance metric in favour of the treatment group
+#We then know that "smoking" leads to a higher "rate of cancer", but the covariates lead someone to be a "smoker"
+
+#THIS CODE IS WRITTEN TO RUN ON A MAC
+
+#process
+1. examine differences in mean scores between the two groups for the outcome variable and pre-treatment covariates
+2. estimate the propensity score (probability of being in treatment group given by a set of pre-treatment covariates)
+3. examine the region of common support
+4. choose and execute a matching algorithm (nearest neighbour propensity score matching)
+5. examine the covariate balance after matching
+6. estimate treatment effects
+
+#Step 0: setup R and load the data
+
+#load required packages
+
+library(MatchIt)
+library(dplyr)
+library(ggplot2)
+
+#load data
+
+ecls <- read.csv("/Users/.../data/File Name.csv")
+
+#Step 1: check that there are significant differences between the groups on the variables before proceeding
+#variables in dataset
+#"GROUP_DIMENSION" indicates if person is in control (coded as 0) or treatment group (coded as 1)
+#"PERFORMANCE_METRIC" indicates the metric of interest (i.e. does going to a Catholic school influence MATH SCORE)
+#the outcome variable (whether in control or not) coded as 0 (control) and 1 (treatment)
+#need to see if there is a difference in the groups before continuing
+
+first_comparison <-
+ecls %>%
+  group_by(GROUP_DIMENSION) %>%
+  summarise(n_people = n(),
+            mean_performance_metric = mean(PERFORMANCE_METRIC),
+            std_error_performance_metric = sd(PERFORMANCE_METRIC) / sqrt(n_people))
+write.csv(first_comparison, file="/Users/.../data/01_first_comparison.csv")
+
+#if there is a difference, is it statistically significant?
+
+with(ecls, t.test(PERFROMANCE_METRIC ~ GROUP_DIMENSION))
+
+#first, calculate the mean score for each of the variables of interest (list as many as you have)
+#replace COVAR with variable name
+
+ecls_cov <- c('COVAR1', 'COVAR2', 'COVAR3', 'COVAR4', 'COVAR5')
+ecls %>%
+  group_by(GROUP_DIMENSION) %>%
+  select(one_of(ecls_cov)) %>%
+  summarise_all(funs(mean(., na.rm = T)))
+
+#now test whether these differences are statistically significant
+
+lapply(ecls_cov, function(v) {
+    t.test(ecls[, v] ~ ecls[, 'GROUP_DIMENSION'])
+})
+
+#Step 2: estimate the propensity score
+#only include covariates that have a statistically significant difference in the group dimension
+#run a logit model for the propensity score estimation model
+
+m_ps <- glm(GROUP_DIMENSION ~ COVAR1 + COVAR2 + COVAR3 + COVAR4 + COVAR5, family=binomial(), data=ecls)
+summary(m_ps)
+x <- summary.glm(m_ps)$coefficients
+write.csv(x, file="/Users/.../data/02_propensity_score_estimation_model.csv")
+
+#now calculate the propensity score for each person in the file
+#pr_score is the propensity score (probability of being in treatment group) and second column is the actual group status
+
+prs_df <- data.frame(pr_score = predict(m_ps, type = "response"), GROUP_DIMENSION = m_ps$model$GROUP_DIMENSION)
+head(prs_df)
+x <- prs_df
+write.csv(x, file="/Users/.../data/03_propensity_score_for_each_person.csv")
+
+#Step 3: examine the region of common support
+#draw 2 histograms to see if the propensity scores look right
+#you want the control group to have a high count of low probability of being in the treatment group
+#and the treatment group to have a low count of low probability of being in the treatment group
+
+labs <- paste("Actual school type attended:", c("Catholic", "Public"))
+prs_df %>%
+  mutate(GROUP_DIMENSION = ifelse(GROUP_DIMENSION == 1, labs[1], labs[2])) %>%
+  ggplot(aes(x = pr_score)) +
+  geom_histogram(color = "white") +
+  facet_wrap(~GROUP_DIMENSION) +
+  xlab("Probability of being in the treatment group") +
+  theme_bw()
+
+#Step 4: execute the matching algorithm
+#now execute a matching algorithm
+#find pairs of people that have very similar propensity scores but differ in group status
+
+ecls_nomiss <- ecls %>%  #MatchIt does not allow missing values
+  select(PERFORMANCE_METRIC, GROUP_DIMENSION, one_of(ecls_cov)) %>%
+  na.omit()
+  
+mod_match <- matchit(GROUP_DIMENSION ~ COVAR1 + COVAR2 + COVAR3 + COVAR4 + COVAR5, method = "nearest", data = ecls_nomiss)
+summary(mod_match)
+
+#create a dataframe containing only the matched observations
+
+dta_m <- match.data(mod_match)
+dim(dta_m)
+
+#now assess covariate balance in the matched sample
+#check t-tests of difference-in-means
+#and compute the avg. absolute standardised difference ("standardised imbalance")
+
+#you want the means between the two groups to be as similar as possible (i.e. 1.08 vs 1.09)
+
+dta_m %>%
+  group_by(GROUP_DIMENSION) %>%
+  select(one_of(ecls_cov)) %>%
+  summarise_all(funs(mean))
+
+#you can statistically test this with t-tests (want p-value ABOVE .05, means there is no difference in means)
+
+lapply(ecls_cov, function(v) {
+    t.test(dta_m[, v] ~ dta_m$GROUP_DIMENSION)
+})
+
+#Step 5: estimate the treatment effects
+#once we have a matched sample we are happy with we can estimate the treatment effect with a t-test
+#if the p-value is above .05 then the covariates in the model differentiate the two groups
+
+with(dta_m, t.test(PERFORMANCE_METRIC ~ GROUP_DIMENSION))
+
+#run an OLS with covariates to see the impact of individual variables
+#looking at the estimate column
+
+lm_treat <- lm(PERFORMANCE_METRIC ~ GROUP_DIMENSION + COVAR1 + COVAR2 + COVAR3 + COVAR4 + COVAR5, data = dta_m)
+summary(lm_treat)
