@@ -1,0 +1,19 @@
+#CONVERTING JSON TO CSV FOR ANALYSIS
+
+#THIS CODE IS WRITTEN TO RUN ON A MAC
+
+#load required packages
+
+require(RJSONIO)
+require(rjson)
+library("rjson")
+
+#load data
+
+filename <- "/Users/.../data/File Name.json"
+json_data <- fromJSON(file=filename)
+json <- do.call("rbind", json_data)
+
+#export data
+
+write.csv(json, file="/Users/.../data/Output Name.csv")
