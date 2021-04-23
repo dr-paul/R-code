@@ -1,1 +1,44 @@
-f
+#load package
+library(circlize)
+
+#load data
+#data should have 3 columns: A, B, C
+#A and B indicate the connection between two things: yellow + banana
+#C is the strength (correlation) of the connection between A and B
+file <- read.csv("<filepath>/Desktop/data/<filename>.csv", header=TRUE)
+str(file)
+
+#set colours for individual categories using HEX codes
+col_mat = c(
+blue = "#88b8e7",
+red = "#ff4040",
+green = "#bada55",
+orange = "#ffa500",
+purple = "#d27cd8",
+brown = "#bdb897",
+teal = "#40e0d0",
+pink = "#ffc0cb",
+yellow = "#ffd700",
+white = "#666666",
+
+apple = "grey",
+banana = "grey",
+cherry = "grey",
+blueberries = "grey",
+strawberries = "grey"
+)
+
+#other HEX colours
+# red (#ff4040)
+# orange (#ffa500)
+# tan (#bdb897)
+# yellow (#ffd700)
+# green (#bada55)
+# teal (#40e0d0)
+# blue (#88b8e7)
+# purple (#d27cd8)
+# pink (#ffc0cb)
+# grey (#666666)
+
+#make the chord diagram
+chord <- chordDiagram(file, grid.col = col_mat, transparency = 0.5, annotationTrack = c("name", "grid"))
