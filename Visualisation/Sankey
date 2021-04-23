@@ -1,0 +1,73 @@
+#load required packages
+library(networkD3)
+library(htmlwidgets)
+
+#attach data
+#need 2 dataframes: a 'links' DF with 3 columns (from, to, value), and a 'nodes' DF with 1 column (name) with the name of each node
+##links
+#from	to	value
+#1		2		124.72
+#1		3		0.59
+#3		2		14.41
+
+#start nodes from 0 not 1
+
+#nodes
+#name
+#nameA
+#nameB
+#nameC
+
+links <- read.csv("C:/Users/paul.vella/Desktop/Data/links_file.csv", header=TRUE)
+nodes <- read.csv("C:/Users/paul.vella/Desktop/Data/nodes_file.csv", header=TRUE)
+
+# prepare color scale, give 1 colour for each node.
+my_colour <- 'd3.scaleOrdinal() 
+	.domain(["email", "social","display", "direct", "home", "booking", "content"]) 
+	.range(["#0066B2", "#B0003B" , "#FFDD00", "#B43E97", "#00B0A1", "#39B549", "#FF7800", "#FF006F"])'
+
+#draw the sankey
+p <- sankeyNetwork(
+	Links = links, 
+	Nodes = nodes, 
+	Source = "from", 
+	Target = "to", 
+	Value = "value", 
+	NodeID = "name", 
+	fontSize = 12, 
+	fontFamily = "Arial",
+	nodeWidth = 30,
+	colourScale = my_colour)
+
+#only need this if you want to rotate the text
+#sideways
+
+p <- onRender(
+  p,
+  '
+  function(el,x) {
+    d3.select(el)
+      .selectAll(".node text")
+      .attr("text-anchor", "middle")
+      .style("writing-mode", "vertical-rl")
+      .style("text-orientation", "sideways");
+  }
+  '
+)
+
+#upright
+
+p <- onRender(
+  p,
+  '
+  function(el,x) {
+    d3.select(el)
+      .selectAll(".node text")
+      .attr("text-anchor", "end")
+      .style("writing-mode", "horizontal")
+      .style("text-orientation", "upright");
+  }
+  '
+)
+
+p
