@@ -1,0 +1,57 @@
+#load packages
+library(tidyverse)
+library(viridis)
+library(patchwork)
+library(igraph)
+library(ggraph)
+library(colormap)
+
+#load data
+#data should be a matrix with "1" indicating A and B are connected
+#first column is labelled "from"
+#like this:
+#from    Alpha       Beta     Gamma
+#Beta    1                    1
+#Gamma   1           1
+links <- read.csv("/Users/pvella/Desktop/data/arctest2.csv", header=TRUE)
+str(file)
+
+#transform the adjacency matrix into long format
+connect <- links %>%
+gather(key="to", value="value", -1) %>%
+mutate(to = gsub("\\."," ",to)) %>%
+na.omit()
+
+#find the number of connections per person
+c(as.character(connect$from), as.character(connect$to)) %>%
+as_tibble() %>%
+group_by(value) %>%
+summarize(n=n()) -> coauth
+colnames(coauth) <- c("name", "n")
+
+#create an igraph object and find community
+mygraph <- graph_from_data_frame(connect, vertices=coauth, directed=FALSE)
+com <- walktrap.community(mygraph)
+
+#reorder dataset and make the graph
+coauth <- coauth %>%
+mutate(grp=com$membership) %>%
+arrange(grp) %>%
+mutate(name=factor(name, name))
+
+#colour vector based on viridis scale
+mycolor <- colormap(colormap=colormaps$viridis, nshades=max(coauth$grp))
+mycolor <- sample(mycolor, length(mycolor))
+
+#make the arc diagram
+arc <- ggraph(mygraph, layout="linear") +
+geom_edge_arc(edge_color="#000000", edge_alpha=0.2, fold=TRUE) +
+geom_node_point(aes(size=n, color=as.factor(coauth$grp), fill=coauth$grp),
+alpha=0.5) +
+scale_size_continuous(range=c(0.5,8)) +
+scale_color_manual(values=mycolor) +
+geom_node_text(aes(label=name), angle=90, repel=TRUE, vjust=1.25, nudge_y=-1.5,
+size=2) +
+theme_void() +
+theme(legend.position="none", plot.margin=unit(rep(2,4), "cm")
+)
