@@ -1,0 +1,20 @@
+library('Ternary')
+
+#draw a blank ternary chart (each axis is 0-100)
+TernaryPlot()
+
+#draw a ternary chart with axis labels
+#alab is left-side
+#blab is right-side
+#clab is bottom
+TernaryPlot(alab='Quality', blab='Price', clab='Speed')
+
+#data is a set of coordinates: A, B, C
+data_points <- list(
+x1 = c(100, 10, 10),
+x2 = c(10, 100, 10),
+x3 = c(10, 10, 100)
+)
+
+#add data to chart (requires the TernaryPlot function above to have run
+AddToTernary(text, data_points, names(data_points), cex=0.8, font=2)
