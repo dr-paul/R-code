@@ -1,0 +1,39 @@
+#load package
+library(googleVis)
+
+#only plots 1 data source by low to high on a week calendar 
+#load data
+#data should have 2 columns, one with date info (datevar called "dates") and one numerical (called "value")
+x <- read.csv("/Users/pvella/Desktop/data/calendar.csv", header=TRUE)
+str(file)
+
+#convert date variable into date format for R to read
+x$dates <- as.Date(x$dates, format="%Y-%m-%d")
+
+#draw calendar
+#cellSize larger than 10 and the chart won't appear
+#colorAxis - first colour maps to lowest values, second to highest
+
+cal <- gvisCalendar(x, datevar="dates", numvar="value",
+options=list(
+title="Cumulative COVID-19 cases for Banyule council",
+width=1000,
+calendar="{
+yearLabel:{
+fontSize: 30,
+color: '#000000',
+bold: true
+},
+cellSize: 10,
+daysOfWeek: 'MTWTFSS',
+}",
+colorAxis="{
+minValue:1,
+colors:[
+#F5F0F0',
+#FF4040'
+]
+}"
+)
+)
+plot(cal)
